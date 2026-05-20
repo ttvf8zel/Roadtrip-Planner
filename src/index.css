@@ -1,0 +1,23 @@
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07111a;--panel:#0d1f2d;--panel2:#0a1822;
+  --border:#1e3a4a;--border2:#2a4a5a;
+  --accent:#ff6b35;--accent2:#ffaa80;
+  --text:#e8dcc8;--text2:#b0c0cc;
+  --muted:#4a6a7a;--dim:#1a2e3a;
+  --green:#4ade80;--blue:#60a5fa;--purple:#c084fc;
+  --red:#f87171;
+}
+html,body,#root{height:100%;background:var(--bg);font-family:'Georgia',serif;color:var(--text);overflow:hidden}
+button{cursor:pointer;font-family:inherit}
+input,textarea,select{font-family:inherit}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.leaflet-tile-pane{filter:brightness(.72) saturate(.5) hue-rotate(190deg) contrast(1.05)}
+.leaflet-control-zoom a{background:var(--panel)!important;color:var(--accent)!important;border-color:var(--border)!important}
+.leaflet-control-attribution{background:rgba(7,17,26,.75)!important;color:var(--muted)!important;font-size:9px!important}
+.leaflet-popup-content-wrapper{background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.leaflet-popup-tip{background:var(--panel)}
+.leaflet-popup-close-button{color:var(--muted)!important}
