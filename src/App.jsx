@@ -61,7 +61,7 @@ export default function App() {
       {/* TOPBAR */}
       <div style={c.topbar}>
         <div style={{ flexShrink:0 }}>
-          <div style={{ fontFamily:'monospace',fontSize:9,letterSpacing:3,color:'#ff6b35',textTransform:'uppercase' }}>Oct–Dec 2026 · 3 Travelers</div>
+          <div style={{ fontFamily:'monospace',fontSize:9,letterSpacing:3,color:'#ff6b35',textTransform:'uppercase' }}>Sep 14 – Dec 14 2026 · 3 Travelers · 90 Days</div>
           <div style={{ fontSize:15,fontWeight:400,color:'#e8dcc8',lineHeight:1.1 }}>🇺🇸 Great American Road Trip</div>
         </div>
 
