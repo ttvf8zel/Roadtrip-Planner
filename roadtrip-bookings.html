@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🇺🇸 Road Trip Bookings</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07111a;--panel:#0d1f2d;--panel2:#0a1822;
+  --border:#1e3a4a;--border2:#2a4a5a;
+  --accent:#ff6b35;--text:#e8dcc8;--muted:#4a6a7a;--dim:#1a2e3a;
+  --green:#4ade80;--yellow:#facc15;--red:#f87171;--blue:#60a5fa;--purple:#c084fc;
+  --andreas:#60a5fa;--mads:#4ade80;--kristoffer:#c084fc;
+}
+html,body{min-height:100%;background:var(--bg);font-family:'Georgia',serif;color:var(--text)}
+button{cursor:pointer;font-family:inherit}input,textarea,select{font-family:inherit}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border)}
+
+#app{max-width:920px;margin:0 auto;padding:18px 14px 80px}
+
+/* HEADER */
+header{padding:24px 0 18px;border-bottom:1px solid var(--border);margin-bottom:20px}
+.eye{font-family:monospace;font-size:10px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:6px}
+header h1{font-size:26px;font-weight:400;margin-bottom:4px}
+header .sub{font-family:monospace;font-size:10px;color:var(--muted)}
+#sync-bar{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+#sync-status{display:inline-flex;align-items:center;gap:6px;font-family:monospace;font-size:10px;padding:4px 12px;border-radius:12px;border:1px solid var(--border);color:var(--muted)}
+#sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+#sync-dot.green{background:var(--green)}
+#sync-dot.yellow{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* SETUP */
+#setup-panel{background:var(--panel);border:1px solid var(--accent);border-radius:10px;padding:18px;margin-bottom:20px}
+#setup-panel h2{font-size:14px;color:var(--accent);margin-bottom:8px;font-weight:400;font-family:monospace}
+#setup-panel p{font-family:monospace;font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:12px}
+.setup-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.sinp{width:100%;padding:9px 11px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:monospace;outline:none}
+.sinp:focus{border-color:var(--accent)}
+.sbtn{padding:9px 20px;background:var(--accent);color:var(--bg);border:none;border-radius:6px;font-family:monospace;font-size:11px;font-weight:700}
+
+/* STATS */
+#stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px}
+.stat-val{font-size:20px;color:var(--accent);line-height:1;margin-bottom:3px}
+.stat-lbl{font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+/* ADD FORM */
+#add-section{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:20px}
+#add-section h2{font-family:monospace;font-size:11px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:0}
+.fg label{font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
+.inp{width:100%;padding:9px 11px;background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none;transition:border-color .15s}
+.inp:focus{border-color:var(--accent)}
+.inp::placeholder{color:var(--muted)}
+.inp[readonly]{color:var(--accent);cursor:default}
+select.inp option{background:var(--panel)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:9px}
+#add-btn{padding:11px 28px;background:var(--accent);color:var(--bg);border:none;border-radius:7px;font-family:monospace;font-size:12px;font-weight:700;letter-spacing:1px;margin-top:6px;width:100%}
+#add-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* FILTERS */
+#filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.fbtn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;transition:all .15s}
+.fbtn.active{border-color:var(--accent);color:var(--accent);background:rgba(255,107,53,.1)}
+#search{padding:6px 12px;background:var(--panel2);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:11px;outline:none;width:160px;margin-left:auto}
+#search:focus{border-color:var(--accent)}
+
+/* CARDS */
+#list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;padding:14px 16px;transition:border-color .15s}
+.card:hover{border-color:var(--border2)}
+.card.confirmed{border-left-color:var(--green)}
+.card.pending{border-left-color:var(--yellow)}
+.card.cancelled{border-left-color:var(--red);opacity:.55}
+.card-top{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.card-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.card-title{flex:1}
+.card-name{font-size:16px;font-weight:400;color:var(--text);margin-bottom:2px}
+.card-loc{font-family:monospace;font-size:10px;color:var(--muted)}
+.card-price-block{text-align:right;flex-shrink:0}
+.card-dkk{font-size:15px;color:var(--accent)}
+.card-usd{font-family:monospace;font-size:9px;color:var(--muted)}
+.card-each{font-family:monospace;font-size:9px;color:var(--muted)}
+.status-badge{display:inline-block;padding:3px 9px;border-radius:10px;font-family:monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-bottom:5px}
+.s-confirmed{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+.s-pending{background:rgba(250,204,21,.15);color:var(--yellow);border:1px solid rgba(250,204,21,.3)}
+.s-cancelled{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+.card-details{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:10px}
+.det-lbl{font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.det-val{font-size:11px;color:var(--text)}
+.det-val.accent{color:var(--accent)}
+.card-bottom{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.pill{padding:3px 10px;border-radius:10px;font-family:monospace;font-size:9px;letter-spacing:.5px;border:1px solid transparent}
+.pill-a{background:rgba(96,165,250,.12);color:var(--andreas);border-color:rgba(96,165,250,.25)}
+.pill-m{background:rgba(74,222,128,.12);color:var(--mads);border-color:rgba(74,222,128,.25)}
+.pill-k{background:rgba(192,132,252,.12);color:var(--kristoffer);border-color:rgba(192,132,252,.25)}
+.cancel-note{font-family:monospace;font-size:9px;color:var(--muted)}
+.del-btn{margin-left:auto;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:monospace;font-size:9px;transition:all .15s}
+.del-btn:hover{border-color:var(--red);color:var(--red)}
+.card-notes{font-size:11px;color:var(--muted);font-style:italic;margin-top:7px;line-height:1.5;border-top:1px solid var(--border);padding-top:7px}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);font-family:monospace;font-size:11px;line-height:2.5}
+
+@media(max-width:600px){
+  #stats{grid-template-columns:1fr 1fr}
+  .g2,.g3{grid-template-columns:1fr}
+  .card-details{grid-template-columns:1fr 1fr}
+  #search{width:100%;margin-left:0}
+  .setup-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<header>
+  <span class="eye">🇺🇸 USA Road Trip · Sep 21 – Dec 14 2026</span>
+  <h1>Booking Tracker</h1>
+  <div class="sub">Andreas · Mads · Kristoffer — synced across all devices</div>
+  <div id="sync-bar">
+    <div id="sync-status"><div id="sync-dot"></div><span id="sync-text">Not connected</span></div>
+    <button onclick="loadBookings()" style="padding:4px 12px;background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:monospace;font-size:10px">⟳ Refresh</button>
+  </div>
+</header>
+
+<!-- CONNECTED via JSONBin -->
+<div id="setup-panel" style="display:none"></div>
+
+<!-- STATS -->
+<div id="stats">
+  <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-lbl">Total bookings</div></div>
+  <div class="stat"><div class="stat-val" id="s-confirmed" style="color:var(--green)">—</div><div class="stat-lbl">Confirmed</div></div>
+  <div class="stat"><div class="stat-val" id="s-pending" style="color:var(--yellow)">—</div><div class="stat-lbl">Pending</div></div>
+  <div class="stat"><div class="stat-val" id="s-cost" style="font-size:13px;color:var(--accent)">—</div><div class="stat-lbl">Total (DKK)</div></div>
+</div>
+
+<!-- ADD FORM -->
+<div id="add-section">
+  <h2>+ Add Booking</h2>
+  <div class="g2">
+    <div class="fg"><label>Place / Name</label><input class="inp" id="f-place" placeholder="e.g. Wetherill Inn"/></div>
+    <div class="fg"><label>Location / City stop</label><input class="inp" id="f-loc" placeholder="e.g. Monument Valley, AZ"/></div>
+  </div>
+  <div class="g3">
+    <div class="fg"><label>Type</label>
+      <select class="inp" id="f-type">
+        <option value="hotel">🏨 Hotel / Motel</option>
+        <option value="airbnb">🏠 Airbnb</option>
+        <option value="camping">⛺ Camping</option>
+        <option value="tour">🎟️ Tour / Activity</option>
+        <option value="flight">✈️ Flight</option>
+        <option value="transport">🚌 Transport</option>
+        <option value="show">🎭 Show / Event</option>
+        <option value="other">📌 Other</option>
+      </select>
+    </div>
+    <div class="fg"><label>Check-in / Date</label><input class="inp" id="f-in" type="date"/></div>
+    <div class="fg"><label>Check-out / End</label><input class="inp" id="f-out" type="date"/></div>
+  </div>
+  <div class="g3">
+    <div class="fg"><label>Total Price (USD $)</label><input class="inp" id="f-usd" type="number" step="0.01" placeholder="208.15" oninput="autoCalc()"/></div>
+    <div class="fg"><label>Total Price (DKK)</label><input class="inp" id="f-dkk" type="number" placeholder="auto from USD" oninput="autoCalcEach()"/></div>
+    <div class="fg"><label>Each person owes (DKK)</label><input class="inp" id="f-each" type="number" placeholder="auto" readonly/></div>
+  </div>
+  <div class="g3">
+    <div class="fg"><label>Status</label>
+      <select class="inp" id="f-status">
+        <option value="confirmed">✅ Confirmed</option>
+        <option value="pending">⏳ Pending</option>
+        <option value="cancelled">❌ Cancelled</option>
+      </select>
+    </div>
+    <div class="fg"><label>Booked under</label>
+      <select class="inp" id="f-who">
+        <option value="andreas">Andreas</option>
+        <option value="mads">Mads</option>
+        <option value="kristoffer">Kristoffer</option>
+      </select>
+    </div>
+    <div class="fg"><label>Card used</label>
+      <select class="inp" id="f-card">
+        <option value="andreas">Andreas' card</option>
+        <option value="mads">Mads' card</option>
+        <option value="kristoffer">Kristoffer's card</option>
+      </select>
+    </div>
+  </div>
+  <div class="g2" style="margin-bottom:9px">
+    <div class="fg"><label>Confirmation / Ref #</label><input class="inp" id="f-ref" placeholder="e.g. WIAZ05244441"/></div>
+    <div class="fg"><label>Cancellation Policy</label><input class="inp" id="f-cancel" placeholder="e.g. 24h notice required"/></div>
+  </div>
+  <div class="fg" style="margin-bottom:9px"><label>Notes</label><input class="inp" id="f-notes" placeholder="Room type, special requests, contact info…"/></div>
+  <button id="add-btn" onclick="addBooking()" type="button" disabled>Connect to Supabase to add bookings</button>
+</div>
+
+<!-- FILTERS -->
+<div id="filters">
+  <button class="fbtn active" onclick="setFilter('all',this)">All</button>
+  <button class="fbtn" onclick="setFilter('hotel',this)">🏨 Hotel</button>
+  <button class="fbtn" onclick="setFilter('airbnb',this)">🏠 Airbnb</button>
+  <button class="fbtn" onclick="setFilter('camping',this)">⛺ Camping</button>
+  <button class="fbtn" onclick="setFilter('tour',this)">🎟️ Tours</button>
+  <button class="fbtn" onclick="setFilter('flight',this)">✈️ Flights</button>
+  <button class="fbtn" onclick="setFilter('show',this)">🎭 Shows</button>
+  <input class="inp" id="search" placeholder="Search…" oninput="render()"/>
+</div>
+
+<div id="list"><div class="empty">Loading bookings… ⟳</div></div>
+
+</div>
+<script>
+const DKK = 6.5;
+const ICONS = {hotel:'🏨',airbnb:'🏠',camping:'⛺',tour:'🎟️',flight:'✈️',transport:'🚌',show:'🎭',other:'📌'};
+
+const SURL = 'https://snjiglhmwolyauidusln.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuamlnbGhtd29seWF1aWR1c2xuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NDcyMDIsImV4cCI6MjA5NjMyMzIwMn0.QNX3j5PDwMTfPuWG_8C5-WI7b6MqIGT46jwjp7FC-TU';
+
+let bookings = [], currentFilter = 'all';
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('add-btn').disabled = false;
+  document.getElementById('add-btn').textContent = 'Add Booking';
+  setSyncing('connecting');
+  loadBookings();
+  setInterval(loadBookings, 20000);
+});
+
+// ── SUPABASE ──
+async function supa(path, opts = {}) {
+  const res = await fetch(`${SURL}/rest/v1${path}`, {
+    headers: {
+      'apikey': SKEY,
+      'Authorization': `Bearer ${SKEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...(opts.headers || {})
+    },
+    ...opts
+  });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  const t = await res.text();
+  return t ? JSON.parse(t) : null;
+}
+
+async function loadBookings() {
+  setSyncing('syncing');
+  try {
+    const data = await supa('/trip_bookings?order=checkin.asc,created_at.asc');
+    bookings = data || [];
+    setSyncing('ok');
+    render();
+  } catch(e) {
+    setSyncing('error');
+    console.error('Load error:', e);
+  }
+}
+
+async function addBooking() {
+  const place = document.getElementById('f-place').value.trim();
+  if (!place) { alert('Please enter a place name'); return; }
+  const usd = parseFloat(document.getElementById('f-usd').value) || 0;
+  const dkk = parseFloat(document.getElementById('f-dkk').value) || Math.round(usd * DKK);
+  const each = Math.round(dkk / 3);
+  const b = {
+    id: 'b' + Date.now(),
+    name: place,
+    location: document.getElementById('f-loc').value.trim(),
+    type: document.getElementById('f-type').value,
+    checkin: document.getElementById('f-in').value || null,
+    checkout: document.getElementById('f-out').value || null,
+    price_usd: usd || null,
+    price_dkk: dkk || null,
+    each_dkk: each || null,
+    status: document.getElementById('f-status').value,
+    ref: document.getElementById('f-ref').value.trim() || null,
+    cancel_policy: document.getElementById('f-cancel').value.trim() || null,
+    booked_under: document.getElementById('f-who').value,
+    card_used: document.getElementById('f-card').value,
+    notes: document.getElementById('f-notes').value.trim() || null,
+  };
+  const btn = document.getElementById('add-btn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await supa('/trip_bookings', { method: 'POST', body: JSON.stringify(b), prefer: 'return=minimal' });
+    ['f-place','f-loc','f-usd','f-dkk','f-each','f-ref','f-cancel','f-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-in').value = '';
+    document.getElementById('f-out').value = '';
+    await loadBookings();
+  } catch(e) {
+    alert('Failed to save: ' + e.message);
+    console.error(e);
+  }
+  btn.disabled = false; btn.textContent = 'Add Booking';
+}
+
+async function deleteBooking(id) {
+  if (!confirm('Remove this booking?')) return;
+  try {
+    await supa(`/trip_bookings?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    await loadBookings();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function cycleStatus(id) {
+  const b = bookings.find(x => x.id === id);
+  if (!b) return;
+  const next = {confirmed:'pending', pending:'cancelled', cancelled:'confirmed'};
+  try {
+    await supa(`/trip_bookings?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({status: next[b.status] || 'confirmed'}), prefer: 'return=minimal' });
+    await loadBookings();
+  } catch(e) { console.error(e); }
+}
+
+// ── RENDER ──
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  render();
+}
+
+function render() {
+  const q = (document.getElementById('search')?.value || '').toLowerCase();
+  let filtered = bookings.filter(b => {
+    if (currentFilter !== 'all' && b.type !== currentFilter) return false;
+    if (q && !JSON.stringify(b).toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Stats from all bookings
+  const active = bookings.filter(b => b.status !== 'cancelled');
+  document.getElementById('s-total').textContent = bookings.length;
+  document.getElementById('s-confirmed').textContent = bookings.filter(b=>b.status==='confirmed').length;
+  document.getElementById('s-pending').textContent = bookings.filter(b=>b.status==='pending').length;
+  const total = active.reduce((s,b) => s+(b.price_dkk||0), 0);
+  document.getElementById('s-cost').textContent = total ? total.toLocaleString('da-DK')+' kr' : '0 kr';
+
+  const list = document.getElementById('list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty">No bookings yet — add your first one above 📋</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(b => {
+    const icon = ICONS[b.type] || '📌';
+    const sCls = {confirmed:'s-confirmed', pending:'s-pending', cancelled:'s-cancelled'}[b.status] || 's-pending';
+    const sLbl = {confirmed:'✅ Confirmed', pending:'⏳ Pending', cancelled:'❌ Cancelled'}[b.status] || '—';
+    const nights = nightCount(b.checkin, b.checkout);
+    const whoCls = {andreas:'pill-a', mads:'pill-m', kristoffer:'pill-k'}[b.booked_under] || 'pill-a';
+    const cardCls = {andreas:'pill-a', mads:'pill-m', kristoffer:'pill-k'}[b.card_used] || 'pill-a';
+    const whoLabel = cap(b.booked_under) + "'s name";
+    const cardLabel = cap(b.card_used) + "'s card";
+
+    return `<div class="card ${b.status}">
+      <div class="card-top">
+        <div class="card-icon">${icon}</div>
+        <div class="card-title">
+          <div class="card-name">${esc(b.name)}</div>
+          <div class="card-loc">${esc(b.location||'')}</div>
+        </div>
+        <div class="card-price-block">
+          <span class="status-badge ${sCls}" onclick="cycleStatus('${b.id}')" title="Click to change status">${sLbl}</span>
+          ${b.price_dkk ? `<div class="card-dkk">${Math.round(b.price_dkk).toLocaleString('da-DK')} kr</div>` : ''}
+          ${b.price_usd ? `<div class="card-usd">$${Number(b.price_usd).toLocaleString()}</div>` : ''}
+          ${b.each_dkk ? `<div class="card-each">${Math.round(b.each_dkk).toLocaleString('da-DK')} kr each</div>` : ''}
+        </div>
+      </div>
+      <div class="card-details">
+        <div><div class="det-lbl">Check-in</div><div class="det-val">${fmtDate(b.checkin)}</div></div>
+        <div><div class="det-lbl">Check-out${nights?` (${nights})`:''}</div><div class="det-val">${fmtDate(b.checkout)}</div></div>
+        <div><div class="det-lbl">Ref #</div><div class="det-val accent">${esc(b.ref||'—')}</div></div>
+      </div>
+      <div class="card-bottom">
+        <span class="pill ${whoCls}">👤 ${whoLabel}</span>
+        <span class="pill ${cardCls}">💳 ${cardLabel}</span>
+        ${b.cancel_policy ? `<span class="cancel-note">⚠️ ${esc(b.cancel_policy)}</span>` : ''}
+        <button class="del-btn" onclick="deleteBooking('${b.id}')">🗑 Remove</button>
+      </div>
+      ${b.notes ? `<div class="card-notes">📝 ${esc(b.notes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── HELPERS ──
+function autoCalc() {
+  const usd = parseFloat(document.getElementById('f-usd').value) || 0;
+  const dkk = Math.round(usd * DKK);
+  if (usd) { document.getElementById('f-dkk').value = dkk; document.getElementById('f-each').value = Math.round(dkk/3); }
+}
+function autoCalcEach() {
+  const dkk = parseFloat(document.getElementById('f-dkk').value) || 0;
+  if (dkk) document.getElementById('f-each').value = Math.round(dkk/3);
+}
+function setSyncing(state) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-text');
+  if (state==='ok') { dot.className='green'; txt.textContent=`Live · ${bookings.length} booking${bookings.length!==1?'s':''}`; }
+  else if (state==='syncing') { dot.className='yellow'; txt.textContent='Syncing…'; }
+  else if (state==='connecting') { dot.className='yellow'; txt.textContent='Connecting…'; }
+  else { dot.className=''; txt.textContent='Connection error'; }
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+function nightCount(ci, co) {
+  if (!ci||!co) return '';
+  const n = (new Date(co)-new Date(ci))/86400000;
+  return n>0 ? n+(n===1?' night':' nights') : '';
+}
+function cap(s) { return s?s[0].toUpperCase()+s.slice(1):''; }
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>
