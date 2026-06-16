@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase, hasSupabase } from './supabase'
-import { DEFAULT_STOPS, BUDGET_FIXED } from './data'
+import { DEFAULT_STOPS, BUDGET_FIXED, SEED_BOOKINGS, ROUTE_VERSION } from './data'
 
 const LS_STOPS = 'rt_stops'
 const LS_ROUTES = 'rt_routes'
 const LS_BUDGET = 'rt_budget'
 const LS_BOOKINGS = 'rt_bookings'
+const LS_IMAGES = 'rt_images'
+const LS_VERSION = 'rt_route_version'
 
 function loadLS(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback }
@@ -19,12 +21,44 @@ export function useTrip() {
   const [stops, setStops] = useState(() => loadLS(LS_STOPS, null))
   const [routeCache, setRouteCache] = useState(() => loadLS(LS_ROUTES, {}))
   const [budgetFixed, setBudgetFixed] = useState(() => loadLS(LS_BUDGET, BUDGET_FIXED))
-  const [bookings, setBookings] = useState(() => loadLS(LS_BOOKINGS, {}))
+  const [bookings, setBookings] = useState(() => loadLS(LS_BOOKINGS, SEED_BOOKINGS))
+  const [imageCache, setImageCache] = useState(() => loadLS(LS_IMAGES, {}))
   const [syncing, setSyncing] = useState(false)
 
   // On first load with no localStorage, use defaults
   useEffect(() => {
     if (stops === null) setStops(DEFAULT_STOPS.map(s => ({ ...s })))
+  }, [])
+
+  // One-time migration when the suggested route (DEFAULT_STOPS/SEED_BOOKINGS) changes.
+  // Refreshes the stop list to the new route while keeping existing bookings.
+  useEffect(() => {
+    const v = loadLS(LS_VERSION, 1)
+    if (v < ROUTE_VERSION && stops !== null) {
+      const fresh = DEFAULT_STOPS.map(s => ({ ...s }))
+      setStops(fresh)
+      saveLS(LS_STOPS, fresh)
+
+      setBookings(prev => {
+        const next = { ...prev }
+        // bring in any newly-seeded stops' bookings (e.g. Bryce Canyon) that aren't present yet
+        for (const [stopId, list] of Object.entries(SEED_BOOKINGS)) {
+          if (!next[stopId]) next[stopId] = list.map(b => ({ ...b }))
+        }
+        // move the Bryce Canyon booking off the Zion stop if it's still there from before
+        const bryceIdx = (next.d14 || []).findIndex(b => b.id === 'b_rubys_inn_bryce')
+        if (bryceIdx > -1) {
+          const bryce = next.d14[bryceIdx]
+          next.d14 = next.d14.filter((_, i) => i !== bryceIdx)
+          if (!(next.d39 || []).some(b => b.id === 'b_rubys_inn_bryce')) {
+            next.d39 = [...(next.d39 || []), { ...bryce, stopId: 'd39', notes: bryce.notes.replace(/^⚠️.*?stop on the route\.\s*/, '') }]
+          }
+        }
+        saveLS(LS_BOOKINGS, next)
+        return next
+      })
+    }
+    saveLS(LS_VERSION, ROUTE_VERSION)
   }, [])
 
   // Persist to localStorage on every change
@@ -99,22 +133,29 @@ export function useTrip() {
     setRouteCache(prev => { const n = {...prev, [key]: data}; saveLS(LS_ROUTES, n); return n })
   }, [])
 
+  const cacheImage = useCallback((key, url) => {
+    setImageCache(prev => { const n = {...prev, [key]: url}; saveLS(LS_IMAGES, n); return n })
+  }, [])
+
   const resetToDefault = useCallback(() => {
     const fresh = DEFAULT_STOPS.map(s => ({ ...s }))
+    const freshBookings = Object.fromEntries(Object.entries(SEED_BOOKINGS).map(([k, v]) => [k, v.map(b => ({ ...b }))]))
     setStops(fresh)
     setBudgetFixed(BUDGET_FIXED)
-    setBookings({})
+    setBookings(freshBookings)
     setRouteCache({})
     saveLS(LS_STOPS, fresh)
     saveLS(LS_BUDGET, BUDGET_FIXED)
-    saveLS(LS_BOOKINGS, {})
+    saveLS(LS_BOOKINGS, freshBookings)
     saveLS(LS_ROUTES, {})
-    saveToSupabase(fresh, BUDGET_FIXED, {})
+    saveLS(LS_VERSION, ROUTE_VERSION)
+    saveToSupabase(fresh, BUDGET_FIXED, freshBookings)
   }, [])
 
   return {
     stops: stops || [],
     routeCache, cacheRoute,
+    imageCache, cacheImage,
     budgetFixed, updateBudgetFixed,
     bookings, updateBookings,
     updateStops, resetToDefault,

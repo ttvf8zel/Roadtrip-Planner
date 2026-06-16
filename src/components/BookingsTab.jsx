@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 const uid = () => Date.now() + '' + Math.random()
 
-const BOOKING_TYPES = [
+export const BOOKING_TYPES = [
   { id:'hotel',    label:'🏨 Hotel/Motel',    color:'#60a5fa' },
   { id:'airbnb',   label:'🏠 Airbnb',         color:'#f97316' },
   { id:'hostel',   label:'🛏️ Hostel',         color:'#c084fc' },
@@ -13,14 +13,14 @@ const BOOKING_TYPES = [
   { id:'other',    label:'📌 Other',           color:'#fb923c' },
 ]
 
-const STATUS = [
+export const STATUS = [
   { id:'planned',  label:'📋 Planned',    color:'#4a6a7a' },
   { id:'booked',   label:'✅ Booked',     color:'#4ade80' },
   { id:'paid',     label:'💰 Paid',       color:'#60a5fa' },
   { id:'cancelled',label:'❌ Cancelled',  color:'#f87171' },
 ]
 
-function EmptyBookingForm({ stopId, onSave, onCancel }) {
+export function EmptyBookingForm({ stopId, onSave, onCancel }) {
   const [d, setD] = useState({ id: uid(), stopId, type:'activity', status:'planned', name:'', date:'', time:'', confirmRef:'', price:'', notes:'', paidBy:'' })
   const set = p => setD(prev=>({...prev,...p}))
   const inp = { width:'100%',padding:'9px 11px',background:'#08131c',border:'1px solid #1e3a4a',borderRadius:7,color:'#e8dcc8',fontSize:12,fontFamily:'Georgia,serif',outline:'none' }
@@ -77,7 +77,7 @@ function EmptyBookingForm({ stopId, onSave, onCancel }) {
   )
 }
 
-function BookingCard({ booking, onDelete, onEdit }) {
+export function BookingCard({ booking, onDelete, onEdit }) {
   const type = BOOKING_TYPES.find(t=>t.id===booking.type) || BOOKING_TYPES[7]
   const status = STATUS.find(s=>s.id===booking.status) || STATUS[0]
   return (

@@ -5,6 +5,8 @@ import StopsPanel from './components/StopsPanel'
 import StopModal from './components/StopModal'
 import BudgetTab from './components/BudgetTab'
 import BookingsTab from './components/BookingsTab'
+import StopDetail from './components/StopDetail'
+import Landing from './components/Landing'
 
 const TABS = [
   { id:'map',      label:'🗺  Map' },
@@ -14,9 +16,11 @@ const TABS = [
 ]
 
 export default function App() {
-  const { stops, routeCache, cacheRoute, budgetFixed, updateBudgetFixed, bookings, updateBookings, updateStops, resetToDefault, syncing, hasSupabase } = useTrip()
+  const { stops, routeCache, cacheRoute, imageCache, cacheImage, budgetFixed, updateBudgetFixed, bookings, updateBookings, updateStops, resetToDefault, syncing, hasSupabase } = useTrip()
+  const [showLanding, setShowLanding] = useState(true)
   const [tab, setTab] = useState('map')
   const [modal, setModal] = useState(null)
+  const [viewStop, setViewStop] = useState(null)
   const [mobileTab, setMobileTab] = useState('map')
   const [panelOpen, setPanelOpen] = useState(true)
   const [searchQ, setSearchQ] = useState('')
@@ -49,10 +53,22 @@ export default function App() {
     if (window.innerWidth < 768) setMobileTab('map')
   }, [])
 
+  const addBooking = useCallback((booking) => {
+    updateBookings(prev => ({ ...prev, [booking.stopId]: [...(prev[booking.stopId]||[]), booking] }))
+  }, [updateBookings])
+
+  const deleteBooking = useCallback((stopId, bookingId) => {
+    updateBookings(prev => ({ ...prev, [stopId]: (prev[stopId]||[]).filter(b=>b.id!==bookingId) }))
+  }, [updateBookings])
+
   const c = { // common styles
     topbar: { flexShrink:0,display:'flex',alignItems:'center',gap:10,padding:'0 14px',height:52,background:'#07111a',borderBottom:'1px solid #1e3a4a',zIndex:100 },
     tabBtn: (active) => ({ padding:'7px 13px',borderRadius:7,border:`1px solid ${active?'#ff6b35':'#1e3a4a'}`,background:active?'#1a2e3a':'transparent',color:active?'#ff6b35':'#4a6a7a',cursor:'pointer',fontFamily:'monospace',fontSize:9,letterSpacing:1,textTransform:'uppercase',whiteSpace:'nowrap',transition:'all .15s' }),
     panel: { width:320,flexShrink:0,background:'#0d1f2d',borderLeft:'1px solid #1e3a4a',display:'flex',flexDirection:'column',overflow:'hidden',transition:'width .25s' },
+  }
+
+  if (showLanding) {
+    return <Landing onEnter={() => setShowLanding(false)} />
   }
 
   return (
@@ -61,7 +77,7 @@ export default function App() {
       {/* TOPBAR */}
       <div style={c.topbar}>
         <div style={{ flexShrink:0 }}>
-          <div style={{ fontFamily:'monospace',fontSize:9,letterSpacing:3,color:'#ff6b35',textTransform:'uppercase' }}>Sep 14 – Dec 14 2026 · 3 Travelers · 90 Days</div>
+          <div style={{ fontFamily:'monospace',fontSize:9,letterSpacing:3,color:'#ff6b35',textTransform:'uppercase' }}>Sep 21 – Dec 14 2026 · 3 Travelers · 84 Days</div>
           <div style={{ fontSize:15,fontWeight:400,color:'#e8dcc8',lineHeight:1.1 }}>🇺🇸 Great American Road Trip</div>
         </div>
 
@@ -83,8 +99,21 @@ export default function App() {
       {/* CONTENT */}
       <div style={{ flex:1,display:'flex',overflow:'hidden',position:'relative' }}>
 
+        {viewStop && (
+          <StopDetail
+            stop={viewStop}
+            bookings={bookings[viewStop.id]}
+            imageCache={imageCache}
+            cacheImage={cacheImage}
+            onBack={()=>setViewStop(null)}
+            onEdit={stop=>{ setViewStop(null); setModal(stop) }}
+            addBooking={addBooking}
+            deleteBooking={deleteBooking}
+          />
+        )}
+
         {/* MAP always rendered (hidden when not active on desktop) */}
-        {(tab==='map' || tab==='stops') && (
+        {!viewStop && (tab==='map' || tab==='stops') && (
           <div style={{ flex:1,display:'flex',overflow:'hidden' }}>
             <MapView
               stops={stops}
@@ -92,6 +121,7 @@ export default function App() {
               cacheRoute={cacheRoute}
               onEdit={stop=>setModal(stop)}
               onDelete={deleteStop}
+              onView={setViewStop}
             />
             {tab==='stops' && (
               <div style={{ ...c.panel, width: panelOpen?320:0 }}>
@@ -109,6 +139,7 @@ export default function App() {
                     onAdd={()=>setModal({id:'__new__'+Date.now(),name:'',lat:null,lng:null,days:1,hours:0,accommodation:'',accommodationNotes:'',budget_per_day:0,activities:[],notes:'',mustSee:[]})}
                     onReset={()=>confirm('Reset to the suggested route? Your changes will be lost.')&&resetToDefault()}
                     onFocus={focusStop}
+                    onView={setViewStop}
                   />
                 )}
               </div>
@@ -116,13 +147,13 @@ export default function App() {
           </div>
         )}
 
-        {tab==='budget' && (
+        {!viewStop && tab==='budget' && (
           <div style={{ flex:1,overflowY:'auto' }}>
             <BudgetTab stops={stops} budgetFixed={budgetFixed} updateBudgetFixed={updateBudgetFixed}/>
           </div>
         )}
 
-        {tab==='bookings' && (
+        {!viewStop && tab==='bookings' && (
           <div style={{ flex:1,overflowY:'auto' }}>
             <BookingsTab stops={stops} bookings={bookings} updateBookings={updateBookings}/>
           </div>

@@ -13,7 +13,7 @@ function fmt(secs) {
 }
 function fmtMi(m) { return Math.round(m * 0.000621371).toLocaleString() }
 
-export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelete, onAddStop }) {
+export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelete, onView, onAddStop }) {
   const mapRef = useRef(null)
   const mapInstance = useRef(null)
   const markersRef = useRef(L.layerGroup())
@@ -96,6 +96,7 @@ export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelet
           ${acts ? `<div style="margin-top:5px">${acts}</div>` : ''}
           ${(s.mustSee || []).length ? `<div style="font-family:monospace;font-size:9px;color:#4ade80;margin-top:4px">${s.mustSee.slice(0, 3).map(m => '📍' + m).join(' · ')}</div>` : ''}
           <div style="display:flex;gap:5px;margin-top:9px">
+            <button onclick="window.__viewStop('${s.id}')" style="padding:4px 10px;background:#ff6b35;border:none;border-radius:6px;color:#07111a;cursor:pointer;font-size:10px;font-family:monospace;font-weight:700">👁 View</button>
             <button onclick="window.__editStop('${s.id}')" style="padding:4px 10px;background:#1e3a4a;border:none;border-radius:6px;color:#e8dcc8;cursor:pointer;font-size:10px;font-family:monospace">✏️ Edit</button>
             <button onclick="window.__deleteStop('${s.id}')" style="padding:4px 10px;background:#2a0e0e;border:none;border-radius:6px;color:#f87171;cursor:pointer;font-size:10px;font-family:monospace">🗑 Delete</button>
           </div>
@@ -117,7 +118,8 @@ export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelet
   useEffect(() => {
     window.__editStop = id => onEdit(stops.find(s => s.id === id))
     window.__deleteStop = id => onDelete(id)
-  }, [stops, onEdit, onDelete])
+    window.__viewStop = id => onView(stops.find(s => s.id === id))
+  }, [stops, onEdit, onDelete, onView])
 
   return (
     <div style={{ position: 'relative', flex: 1 }}>
