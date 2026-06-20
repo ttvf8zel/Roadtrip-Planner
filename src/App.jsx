@@ -7,16 +7,18 @@ import BudgetTab from './components/BudgetTab'
 import BookingsTab from './components/BookingsTab'
 import StopDetail from './components/StopDetail'
 import Landing from './components/Landing'
+import SplitterTab from './components/SplitterTab'
 
 const TABS = [
   { id:'map',      label:'🗺  Map' },
   { id:'stops',    label:'📋 Stops' },
   { id:'budget',   label:'💰 Budget' },
   { id:'bookings', label:'🎟️  Bookings' },
+  { id:'split',    label:'💸 Split' },
 ]
 
 export default function App() {
-  const { stops, routeCache, cacheRoute, imageCache, cacheImage, budgetFixed, updateBudgetFixed, bookings, updateBookings, updateStops, resetToDefault, syncing, hasSupabase } = useTrip()
+  const { stops, routeCache, cacheRoute, imageCache, cacheImage, budgetFixed, updateBudgetFixed, bookings, updateBookings, updateStops, resetToDefault, visited, updateVisited, travelers, updateTravelers, syncing, hasSupabase } = useTrip()
   const [showLanding, setShowLanding] = useState(true)
   const [tab, setTab] = useState('map')
   const [modal, setModal] = useState(null)
@@ -60,6 +62,13 @@ export default function App() {
   const deleteBooking = useCallback((stopId, bookingId) => {
     updateBookings(prev => ({ ...prev, [stopId]: (prev[stopId]||[]).filter(b=>b.id!==bookingId) }))
   }, [updateBookings])
+
+  const toggleVisited = useCallback((stopId) => {
+    updateVisited(prev => {
+      if (prev[stopId]) { const n = {...prev}; delete n[stopId]; return n }
+      return { ...prev, [stopId]: { visitedAt: new Date().toISOString() } }
+    })
+  }, [updateVisited])
 
   const c = { // common styles
     topbar: { flexShrink:0,display:'flex',alignItems:'center',gap:10,padding:'0 14px',height:52,background:'#07111a',borderBottom:'1px solid #1e3a4a',zIndex:100 },
@@ -109,6 +118,8 @@ export default function App() {
             onEdit={stop=>{ setViewStop(null); setModal(stop) }}
             addBooking={addBooking}
             deleteBooking={deleteBooking}
+            visited={visited}
+            onVisit={toggleVisited}
           />
         )}
 
@@ -122,6 +133,8 @@ export default function App() {
               onEdit={stop=>setModal(stop)}
               onDelete={deleteStop}
               onView={setViewStop}
+              visited={visited}
+              onVisit={toggleVisited}
             />
             {tab==='stops' && (
               <div style={{ ...c.panel, width: panelOpen?320:0 }}>
@@ -140,6 +153,8 @@ export default function App() {
                     onReset={()=>confirm('Reset to the suggested route? Your changes will be lost.')&&resetToDefault()}
                     onFocus={focusStop}
                     onView={setViewStop}
+                    visited={visited}
+                    onVisit={toggleVisited}
                   />
                 )}
               </div>
@@ -156,6 +171,12 @@ export default function App() {
         {!viewStop && tab==='bookings' && (
           <div style={{ flex:1,overflowY:'auto' }}>
             <BookingsTab stops={stops} bookings={bookings} updateBookings={updateBookings}/>
+          </div>
+        )}
+
+        {!viewStop && tab==='split' && (
+          <div style={{ flex:1,overflowY:'auto' }}>
+            <SplitterTab stops={stops} bookings={bookings} travelers={travelers} updateTravelers={updateTravelers}/>
           </div>
         )}
       </div>

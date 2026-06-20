@@ -4,9 +4,10 @@ import { BookingCard, EmptyBookingForm } from './BookingsTab'
 
 const DKK = n => (n || 0).toLocaleString('da-DK') + ' kr'
 
-export default function StopDetail({ stop, bookings, imageCache, cacheImage, onBack, onEdit, addBooking, deleteBooking }) {
+export default function StopDetail({ stop, bookings, imageCache, cacheImage, onBack, onEdit, addBooking, deleteBooking, visited, onVisit }) {
   const [img, setImg] = useState(imageCache[stop.id])
   const [adding, setAdding] = useState(false)
+  const isVisited = visited && visited[stop.id]
 
   useEffect(() => {
     if (imageCache[stop.id] !== undefined) { setImg(imageCache[stop.id]); return }
@@ -47,7 +48,12 @@ export default function StopDetail({ stop, bookings, imageCache, cacheImage, onB
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 760, margin: '0 auto', padding: '18px 20px 60px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <button onClick={onBack} style={{ padding: '8px 14px', background: 'rgba(13,31,45,.85)', border: '1px solid #1e3a4a', borderRadius: 8, color: '#e8dcc8', fontFamily: 'monospace', fontSize: 11, cursor: 'pointer' }}>← Back</button>
-          <button onClick={() => onEdit(stop)} style={{ padding: '8px 14px', background: '#ff6b35', border: 'none', borderRadius: 8, color: '#07111a', fontFamily: 'monospace', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>✏️ Edit Stop</button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => onVisit(stop.id)} style={{ padding: '8px 14px', background: isVisited ? '#122012' : '#0a2a1a', border: `1px solid ${isVisited ? '#4ade80' : '#2a6a3a'}`, borderRadius: 8, color: '#4ade80', fontFamily: 'monospace', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              {isVisited ? `✓ Visited ${new Date(isVisited.visitedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short' })}` : '📍 We\'re Here!'}
+            </button>
+            <button onClick={() => onEdit(stop)} style={{ padding: '8px 14px', background: '#ff6b35', border: 'none', borderRadius: 8, color: '#07111a', fontFamily: 'monospace', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>✏️ Edit</button>
+          </div>
         </div>
 
         <div style={{ marginBottom: 6 }}>

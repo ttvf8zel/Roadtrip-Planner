@@ -8,6 +8,8 @@ const LS_BUDGET = 'rt_budget'
 const LS_BOOKINGS = 'rt_bookings'
 const LS_IMAGES = 'rt_images'
 const LS_VERSION = 'rt_route_version'
+const LS_VISITED = 'rt_visited'
+const LS_TRAVELERS = 'rt_travelers'
 
 function loadLS(key, fallback) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback }
@@ -23,6 +25,8 @@ export function useTrip() {
   const [budgetFixed, setBudgetFixed] = useState(() => loadLS(LS_BUDGET, BUDGET_FIXED))
   const [bookings, setBookings] = useState(() => loadLS(LS_BOOKINGS, SEED_BOOKINGS))
   const [imageCache, setImageCache] = useState(() => loadLS(LS_IMAGES, {}))
+  const [visited, setVisited] = useState(() => loadLS(LS_VISITED, {}))
+  const [travelers, setTravelers] = useState(() => loadLS(LS_TRAVELERS, ['Andreas', 'Rasmus', 'Friend 3']))
   const [syncing, setSyncing] = useState(false)
 
   // On first load with no localStorage, use defaults
@@ -66,6 +70,8 @@ export function useTrip() {
   useEffect(() => { saveLS(LS_ROUTES, routeCache) }, [routeCache])
   useEffect(() => { saveLS(LS_BUDGET, budgetFixed) }, [budgetFixed])
   useEffect(() => { saveLS(LS_BOOKINGS, bookings) }, [bookings])
+  useEffect(() => { saveLS(LS_VISITED, visited) }, [visited])
+  useEffect(() => { saveLS(LS_TRAVELERS, travelers) }, [travelers])
 
   // Supabase sync (if configured)
   useEffect(() => {
@@ -86,17 +92,23 @@ export function useTrip() {
         if (v.stops) setStops(v.stops)
         if (v.budgetFixed) setBudgetFixed(v.budgetFixed)
         if (v.bookings) setBookings(v.bookings)
+        if (v.visited) setVisited(v.visited)
+        if (v.travelers) setTravelers(v.travelers)
       }
     } catch {}
     setSyncing(false)
   }
 
-  async function saveToSupabase(newStops, newBudget, newBookings) {
+  async function saveToSupabase(newStops, newBudget, newBookings, newVisited, newTravelers) {
     if (!hasSupabase()) return
     try {
       await supabase.from('trip_data').upsert({
         key: 'main',
-        value: { stops: newStops, budgetFixed: newBudget, bookings: newBookings },
+        value: {
+          stops: newStops, budgetFixed: newBudget, bookings: newBookings,
+          visited: newVisited ?? loadLS(LS_VISITED, {}),
+          travelers: newTravelers ?? loadLS(LS_TRAVELERS, []),
+        },
         updated_at: new Date().toISOString()
       })
     } catch (e) { console.warn('Supabase sync failed', e) }
@@ -125,6 +137,24 @@ export function useTrip() {
       const next = typeof fn === 'function' ? fn(prev) : fn
       saveLS(LS_BOOKINGS, next)
       saveToSupabase(loadLS(LS_STOPS, DEFAULT_STOPS), loadLS(LS_BUDGET, BUDGET_FIXED), next)
+      return next
+    })
+  }, [])
+
+  const updateVisited = useCallback((fn) => {
+    setVisited(prev => {
+      const next = typeof fn === 'function' ? fn(prev) : fn
+      saveLS(LS_VISITED, next)
+      saveToSupabase(loadLS(LS_STOPS, DEFAULT_STOPS), loadLS(LS_BUDGET, BUDGET_FIXED), loadLS(LS_BOOKINGS, {}), next)
+      return next
+    })
+  }, [])
+
+  const updateTravelers = useCallback((fn) => {
+    setTravelers(prev => {
+      const next = typeof fn === 'function' ? fn(prev) : fn
+      saveLS(LS_TRAVELERS, next)
+      saveToSupabase(loadLS(LS_STOPS, DEFAULT_STOPS), loadLS(LS_BUDGET, BUDGET_FIXED), loadLS(LS_BOOKINGS, {}), loadLS(LS_VISITED, {}), next)
       return next
     })
   }, [])
@@ -159,6 +189,8 @@ export function useTrip() {
     budgetFixed, updateBudgetFixed,
     bookings, updateBookings,
     updateStops, resetToDefault,
+    visited, updateVisited,
+    travelers, updateTravelers,
     syncing, hasSupabase: hasSupabase()
   }
 }

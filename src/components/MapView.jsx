@@ -13,7 +13,7 @@ function fmt(secs) {
 }
 function fmtMi(m) { return Math.round(m * 0.000621371).toLocaleString() }
 
-export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelete, onView, onAddStop }) {
+export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelete, onView, visited, onVisit }) {
   const mapRef = useRef(null)
   const mapInstance = useRef(null)
   const markersRef = useRef(L.layerGroup())
@@ -81,9 +81,14 @@ export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelet
       }
 
       pts.forEach((s, i) => {
+        const isVisited = visited && visited[s.id]
+        const pinBg = isVisited ? '#4ade80' : '#ff6b35'
+        const pinBorder = isVisited ? '#80ffaa' : '#ffaa80'
+        const pinGlow = isVisited ? 'rgba(74,222,128,.55)' : 'rgba(255,107,53,.55)'
+        const pinLabel = isVisited ? '✓' : (i + 1)
         const icon = L.divIcon({
           className: '',
-          html: `<div style="display:flex;flex-direction:column;align-items:center;pointer-events:none"><div style="width:28px;height:28px;border-radius:50%;background:#ff6b35;color:#07111a;font-family:monospace;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #ffaa80;box-shadow:0 0 14px rgba(255,107,53,.55)">${i + 1}</div><div style="width:2px;height:8px;background:#ff6b35;opacity:.7"></div></div>`,
+          html: `<div style="display:flex;flex-direction:column;align-items:center;pointer-events:none"><div style="width:28px;height:28px;border-radius:50%;background:${pinBg};color:#07111a;font-family:monospace;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid ${pinBorder};box-shadow:0 0 14px ${pinGlow}">${pinLabel}</div><div style="width:2px;height:8px;background:${pinBg};opacity:.7"></div></div>`,
           iconSize: [28, 36], iconAnchor: [14, 36], popupAnchor: [0, -38]
         })
         const prev = i > 0 ? routeCache[routeKey(pts[i - 1], pts[i])] : null
@@ -95,10 +100,10 @@ export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelet
           ${prev ? `<div style="font-family:monospace;font-size:11px;color:#ff6b35;margin-top:5px;padding-top:5px;border-top:1px solid #1e3a4a">🚗 ${fmtMi(prev.miles)} mi · ${fmt(prev.duration)}</div>` : ''}
           ${acts ? `<div style="margin-top:5px">${acts}</div>` : ''}
           ${(s.mustSee || []).length ? `<div style="font-family:monospace;font-size:9px;color:#4ade80;margin-top:4px">${s.mustSee.slice(0, 3).map(m => '📍' + m).join(' · ')}</div>` : ''}
-          <div style="display:flex;gap:5px;margin-top:9px">
+          <div style="display:flex;gap:5px;margin-top:9px;flex-wrap:wrap">
             <button onclick="window.__viewStop('${s.id}')" style="padding:4px 10px;background:#ff6b35;border:none;border-radius:6px;color:#07111a;cursor:pointer;font-size:10px;font-family:monospace;font-weight:700">👁 View</button>
             <button onclick="window.__editStop('${s.id}')" style="padding:4px 10px;background:#1e3a4a;border:none;border-radius:6px;color:#e8dcc8;cursor:pointer;font-size:10px;font-family:monospace">✏️ Edit</button>
-            <button onclick="window.__deleteStop('${s.id}')" style="padding:4px 10px;background:#2a0e0e;border:none;border-radius:6px;color:#f87171;cursor:pointer;font-size:10px;font-family:monospace">🗑 Delete</button>
+            <button onclick="window.__visitStop('${s.id}')" style="padding:4px 10px;background:${isVisited ? '#122012' : '#0a2a1a'};border:1px solid ${isVisited ? '#4ade80' : '#2a4a2a'};border-radius:6px;color:${isVisited ? '#4ade80' : '#4ade80'};cursor:pointer;font-size:10px;font-family:monospace">${isVisited ? '✓ Visited' : '📍 We\'re here'}</button>
           </div>
         </div>`
 
@@ -119,7 +124,8 @@ export default function MapView({ stops, routeCache, cacheRoute, onEdit, onDelet
     window.__editStop = id => onEdit(stops.find(s => s.id === id))
     window.__deleteStop = id => onDelete(id)
     window.__viewStop = id => onView(stops.find(s => s.id === id))
-  }, [stops, onEdit, onDelete, onView])
+    window.__visitStop = id => onVisit(id)
+  }, [stops, onEdit, onDelete, onView, onVisit])
 
   return (
     <div style={{ position: 'relative', flex: 1 }}>
