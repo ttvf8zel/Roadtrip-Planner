@@ -1,6 +1,6 @@
 // Bump this whenever DEFAULT_STOPS / SEED_BOOKINGS change in a way that
 // existing localStorage data should pick up (see useTrip.js migration)
-export const ROUTE_VERSION = 4
+export const ROUTE_VERSION = 5
 
 export const ACTIVITIES = [
   {id:'nature',   label:'🏔️ Nature & Parks',   color:'#4ade80'},
@@ -25,7 +25,7 @@ export const ACCOMM = [
 
 export const DEFAULT_STOPS = [
   // ── PACIFIC COAST HIGHWAY ──
-  {id:'d1',  name:'San Francisco, CA',                      lat:37.7749, lng:-122.4194, days:3, hours:0, accommodation:'airbnb',  accommodationNotes:'Stay in the Mission or Hayes Valley — walkable and great food', budget_per_day:1040, activities:['culture','food','nightlife'], notes:'Start of the trip! Golden Gate Bridge walk, Alcatraz, Mission burritos, Haight-Ashbury. Arriving Sep 21.', mustSee:['Golden Gate Bridge','Alcatraz','Fishermans Wharf','Mission District']},
+  {id:'d1',  name:'San Francisco, CA',                      lat:37.7749, lng:-122.4194, days:3, hours:0, accommodation:'friends', accommodationNotes:"Staying with Andreas's mom's boss — 5620 La Salle Avenue, San Francisco. Free accommodation!", budget_per_day:650, activities:['culture','food','nightlife'], notes:'Start of the trip! Golden Gate Bridge walk, Alcatraz, Mission burritos, Haight-Ashbury. Arriving Sep 21. Staying with Andreas\'s mom\'s boss at 5620 La Salle Avenue.', mustSee:['Golden Gate Bridge','Alcatraz','Fishermans Wharf','Mission District']},
   {id:'d6',  name:'Yosemite National Park, CA',             lat:37.8651, lng:-119.5383, days:2, hours:0, accommodation:'camping', accommodationNotes:'Book Curry Village or Yosemite Valley Lodge IMMEDIATELY — sells out months ahead. Or camp in the valley.', budget_per_day:715, activities:['nature','adventure'], notes:'Drive up from San Francisco via Highway 120 through the Central Valley (~3.5-4h) — Tioga Pass may still be open in mid-September for the high-country route. From here, head back toward the coast via Highway 99/152 to Monterey. September = perfect weather, fewer crowds than summer.', mustSee:['Yosemite Valley','Half Dome viewpoint','Yosemite Falls','Tunnel View','Mirror Lake']},
   {id:'d2',  name:'Monterey, CA',                           lat:36.6002, lng:-121.8947, days:1, hours:0, accommodation:'',        accommodationNotes:'', budget_per_day:780, activities:['nature','culture'], notes:'Drive down Highway 1 from SF — this IS the PCH. 17-Mile Drive, Cannery Row, sea otters at the aquarium', mustSee:['17-Mile Drive','Monterey Bay Aquarium','Carmel-by-the-Sea']},
   {id:'d3',  name:'Big Sur, CA',                            lat:36.2704, lng:-121.8081, days:0, hours:0, accommodation:'',        accommodationNotes:'', budget_per_day:0, activities:['nature','adventure'], notes:'Drive through on Sep 27 — no overnight stay. Most dramatic coastal scenery in the US. Bixby Bridge, McWay Falls, Pfeiffer Beach. Take it slow.', mustSee:['Bixby Creek Bridge','McWay Falls','Pfeiffer Beach','Julia Pfeiffer Burns State Park']},
